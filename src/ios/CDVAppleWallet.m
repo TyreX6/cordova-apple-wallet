@@ -216,6 +216,27 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
         }
     }
     
+    NSArray *paymentPasses = [[NSArray alloc] init];
+    if (@available(iOS 13.5, *)) { // PKPassTypePayment is deprecated in iOS13.5
+      paymentPasses = [passLibrary passesOfType: PKPassTypeSecureElement];
+      for (PKPass *pass in paymentPasses) {
+        if ([pass.primaryAccountNumberSuffix isEqualToString:suffix]) {
+            [dictionary setObject:@"True" forKey:@"isInWallet"];
+            [dictionary setObject:pass.primaryAccountIdentifier forKey:@"FPANID"];
+            break;
+        }
+      }
+    } else {
+      paymentPasses = [passLibrary passesOfType: PKPassTypePayment];
+      for (PKPass *pass in paymentPasses) {
+       if ([pass.primaryAccountNumberSuffix isEqualToString:suffix]) {
+            [dictionary setObject:@"True" forKey:@"isInWallet"];
+            [dictionary setObject:pass.primaryAccountIdentifier forKey:@"FPANID"];
+            break;
+        }
+      }
+    }
+    
     // find if credit/debit card is exist in any remote pass container e.g. iWatch
     for (PKPaymentPass *remotePass in [passLib remotePaymentPasses]){
         if([remotePass.primaryAccountNumberSuffix isEqualToString:suffix]){
